@@ -1,0 +1,68 @@
+Kafka commands
+
+cd /Users/b0206973/downloads/kafka_2.12-2.2.0
+
+For starting zookeeper: 
+bin/zookeeper-server-start.sh config/zookeeper.properties
+
+For starting Kafka:
+bin/kafka-server-start.sh  config/server.properties
+
+bin/kafka-topics.sh 
+
+Create a new topic:
+bin/kafka-topics.sh --zookeeper 127.0.0.1:2181 --topic first_topic --create --partitions 3 --replication-factor 1
+
+List all the Kafka topics:
+bin/kafka-topics.sh --zookeeper 127.0.0.1:2181 --list
+
+Describe a topic :k
+bin/kafka-topics.sh --zookeeper 127.0.0.1:2181 --topic first_topic --describe
+In its description you will find leader=0. Here 0 represents broker id.
+
+Delete a topic:
+bin/kafka-topics.sh --zookeeper 127.0.0.1:2181 --topic first_topic --delete
+
+Starting producer:
+bin/kafka-console-producer.sh --topic first_topic --broker-list 127.0.0.1:9092 --producer-property acks=all
+
+	If not was not already available then it will create the new topic with default values
+	No. of partition - 1
+	Replication factor - 1
+
+	We can change the defaults by editing nano config/server.properties 
+Start consuming:
+bin/kafka-console-consumer.sh --bootstrap-server 127.0.0.1:9092 --topic first_topic
+
+If you want to consume messages from beginning: 
+bin/kafka-console-consumer.sh --bootstrap-server 127.0.0.1:9092 --topic first_topic --from-beginning
+
+The concept of group id is for consumers
+
+Suppose we run this command in two terminals :
+bin/kafka-console-consumer.sh --bootstrap-server 127.0.0.1:9092 --topic first_topic --from-beginning —group my-first-app
+
+Then here we will have two consumers listening to the same group id, then when we produce the message any one consumer will receive the message and not the both. Its because both consumers are listening from different partitions(no. of partitions in our case is 3). One consumer is listening from 2 partitions and another from 1 partition.
+
+
+Important point:
+If we run this command :
+bin/kafka-console-consumer.sh --bootstrap-server 127.0.0.1:9092 --topic first_topic --from-beginning —group my-second-app —from beginning
+
+I will get all the messages from beginning.
+But if I re run the same command, I won’t get any further messages. Because all the previous messages have already been consumed by this group id.
+
+Kafka command to list down consumer-groups:
+bin/kafka-consumer-groups.sh --bootstrap-server 127.0.0.1:9092 --list
+C
+Kafka command to describe a consumer-group:
+bin/kafka-consumer-groups.sh --bootstrap-server 127.0.0.1:9092 --describe --group my-first-app
+
+Resetting consumer offsets:
+bin/kafka-consumer-groups.sh --bootstrap-server 127.0.0.1:9092 --group my-first-app --reset-offsets --to-earliest --execute --topic first_topic
+
+This command will reset the offset of topic: first_topic to 0 for all partitions.
+
+bin/kafka-consumer-groups.sh --bootstrap-server 127.0.0.1:9092 --group my-first-app --reset-offsets --shift-by -2 --execute --topic first_topic
+
+This command will shift the offset by -2
